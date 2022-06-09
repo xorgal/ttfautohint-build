@@ -33,9 +33,14 @@
 # User configuration.
 #
 
+GREEN='\033[0;32m'
+BLUE='\033[0;34m'
+RED='\033[0;31m'
+NC='\033[0m' # No Color
+
 # The build directory.
-BUILD="$HOME/ttfautohint-build"
-INST="$BUILD/local"
+BUILD="$HOME/.tmp/ttfautohint-build"
+INST="$HOME/local"
 
 # Excepted build binary path
 TTFAUTOHINT_BIN="$INST/bin/ttfautohint"
@@ -61,19 +66,17 @@ HARFBUZZ="harfbuzz-$HARFBUZZ_VERSION"
 TTFAUTOHINT="ttfautohint-$TTFAUTOHINT_VERSION"
 
 if test -d "$BUILD" -o -f "$BUILD"; then
-  echo "Build directory \`$BUILD' must not exist."
+  echo "${RED}Error: Build directory \`$BUILD' must not exist.${NC}"
   exit 1
 fi
 
-mkdir "$BUILD"
+mkdir -p "$BUILD"
 mkdir "$INST"
 
 cd "$BUILD" || exit 1
 
 
-echo "#####"
-echo "Download all necessary archives and patches."
-echo "#####"
+echo "${GREEN}Downloading all necessary archives and patches ...${NC}"
 
 curl -L -O "https://download.savannah.gnu.org/releases/freetype/$FREETYPE.tar.gz"
 curl -L -O "https://github.com/harfbuzz/harfbuzz/releases/download/$HARFBUZZ_VERSION/$HARFBUZZ.tar.xz"
@@ -108,18 +111,14 @@ TA_CXXFLAGS="-g -O2"
 TA_LDFLAGS="-L$INST/lib -L$INST/lib64"
 
 
-echo "#####"
-echo "Extract archives."
-echo "#####"
+echo "${GREEN}Extract archives ...${NC}"
 
 tar -xzvf "$FREETYPE.tar.gz"
 tar -xvf "$HARFBUZZ.tar.xz"
 tar -xzvf "$TTFAUTOHINT.tar.gz"
 
 
-echo "#####"
-echo "Apply patches."
-echo "#####"
+echo "${GREEN}Apply patches...${NC}"
 
 cd "$FREETYPE" || exit 1
 for i in ../ft-patch-*.diff
@@ -146,9 +145,7 @@ done
 cd ..
 
 
-echo "#####"
-echo "$FREETYPE"
-echo "#####"
+echo "${GREEN}Building $FREETYPE ...${NC}"
 
 cd "$FREETYPE" || exit 1
 
@@ -173,9 +170,7 @@ make install
 cd ..
 
 
-echo "#####"
-echo "$HARFBUZZ"
-echo "#####"
+echo "${GREEN}Building $HARFBUZZ ...${NC}"
 
 cd "$HARFBUZZ" || exit 1
 
@@ -202,9 +197,7 @@ make install
 cd ..
 
 
-echo "#####"
-echo "$TTFAUTOHINT"
-echo "#####"
+echo "${GREEN}Building $TTFAUTOHINT ... ${NC}"
 
 cd "$TTFAUTOHINT" || exit 1
 
@@ -228,13 +221,15 @@ make LDFLAGS="$TA_LDFLAGS -all-static"
 make install-strip
 cd ..
 
+echo "${GREEN}Cleaning up ...${NC}"
+rm -rf $HOME/.tmp/ttfautohint-build
+
 # test for the expected path to the executable
 if [ -f "$INST/bin/ttfautohint" ]; then
-  echo "#####"
-  echo "binary: $TTFAUTOHINT_BIN"
-  echo "#####"
+  echo "${GREEN}ttfautohint compiled successfully!${NC}"
+  echo "${GREEN}Path to binary: ${BLUE}$TTFAUTOHINT_BIN${NC}"
 else
-  echo "ttfautohint executable was not found on the path $TTFAUTOHINT_BIN" 1>&2
+  echo "${RED}Error: ttfautohint executable was not found on the path $TTFAUTOHINT_BIN${NC}" 1>&2
   exit 1
 fi
 
